@@ -166,82 +166,85 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
 
             return Stack(
               children: [
-                ListView(
-                  padding: const EdgeInsets.fromLTRB(24, 42, 24, 24),
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          tooltip: 'Back',
-                          onPressed: () => context.go('/packages'),
-                          icon: const Icon(Icons.arrow_back_ios_new),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Search',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: Colors.black,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: (value) =>
-                                setState(() => _query = value),
-                            decoration: InputDecoration(
-                              hintText: 'Search Package',
-                              prefixIcon: const Icon(Icons.search),
-                              filled: true,
-                              fillColor: const Color(0xFFEFEFEF),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 22,
-                                vertical: 14,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
+                NotificationListener<ScrollUpdateNotification>(
+                  onNotification: _hideFiltersWhenScrollingDown,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(24, 42, 24, 24),
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            tooltip: 'Back',
+                            onPressed: () => context.go('/packages'),
+                            icon: const Icon(Icons.arrow_back_ios_new),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton.filled(
-                          style: IconButton.styleFrom(
-                            backgroundColor: const Color(0xFFEFEFEF),
-                            foregroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Search',
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.black,
+                                ),
                           ),
-                          onPressed: () {
-                            setState(() => _showFilters = !_showFilters);
-                          },
-                          icon: const Icon(Icons.tune),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 28),
-                    if (filteredPackages.isEmpty)
-                      const _PackageMessage(
-                        title: 'No results found',
-                        message: 'Try searching another package name.',
-                      )
-                    else
-                      ...filteredPackages.map(
-                        (package) => PackagePreviewCard(
-                          package,
-                          isGuest: isGuest,
-                          sourceRoute: '/search',
-                        ),
+                        ],
                       ),
-                  ],
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (value) =>
+                                  setState(() => _query = value),
+                              decoration: InputDecoration(
+                                hintText: 'Search Package',
+                                prefixIcon: const Icon(Icons.search),
+                                filled: true,
+                                fillColor: const Color(0xFFEFEFEF),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 22,
+                                  vertical: 14,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton.filled(
+                            style: IconButton.styleFrom(
+                              backgroundColor: const Color(0xFFEFEFEF),
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () {
+                              setState(() => _showFilters = !_showFilters);
+                            },
+                            icon: const Icon(Icons.tune),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+                      if (filteredPackages.isEmpty)
+                        const _PackageMessage(
+                          title: 'No results found',
+                          message: 'Try changing your search or filters.',
+                        )
+                      else
+                        ...filteredPackages.map(
+                          (package) => PackagePreviewCard(
+                            package,
+                            isGuest: isGuest,
+                            sourceRoute: '/search',
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 if (_showFilters)
                   Positioned(
@@ -295,11 +298,20 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       );
     } else if (_sortOrder == _PriceSort.highToLow) {
       filteredPackages.sort(
-        (b, a) => b.basePricePerPax.compareTo(a.basePricePerPax),
+        (a, b) => b.basePricePerPax.compareTo(a.basePricePerPax),
       );
     }
 
     return filteredPackages;
+  }
+
+  bool _hideFiltersWhenScrollingDown(ScrollUpdateNotification notification) {
+    final scrollDelta = notification.scrollDelta;
+    if (_showFilters && scrollDelta != null && scrollDelta > 0) {
+      setState(() => _showFilters = false);
+    }
+
+    return false;
   }
 }
 
@@ -307,10 +319,10 @@ enum _PriceSort { none, lowToHigh, highToLow }
 
 enum _MaxPrice {
   any(null, 'Any'),
-  rm25(25.0, 'RM25'),
-  rm50(50.0, 'RM50'),
   rm100(100.0, 'RM100'),
-  rm200(200.0, 'RM200');
+  rm200(200.0, 'RM200'),
+  rm300(300.0, 'RM300'),
+  rm500(500.0, 'RM500');
 
   const _MaxPrice(this.value, this.label);
 
